@@ -205,12 +205,14 @@ pub struct PostParams {
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]
 #[doc = "Determine which encryption method shall be used for the connection."]
 #[doc = ""]
+#[derive(Default)]
 pub enum Mode {
     #[serde(rename = "insecure")]
     Insecure,
     #[serde(rename = "starttls")]
     Starttls,
     #[serde(rename = "tls")]
+    #[default]
     Tls,
 }
 impl TryFrom<&str> for Mode {
@@ -222,11 +224,6 @@ impl TryFrom<&str> for Mode {
             "tls" => Ok(Self::Tls),
             v => Err(format!("Unknown variant {v}")),
         }
-    }
-}
-impl Default for Mode {
-    fn default() -> Self {
-        Self::Tls
     }
 }
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]

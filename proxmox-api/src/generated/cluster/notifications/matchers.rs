@@ -188,8 +188,10 @@ pub struct PostParams {
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]
 #[doc = "Choose between 'all' and 'any' for when multiple properties are specified"]
 #[doc = ""]
+#[derive(Default)]
 pub enum Mode {
     #[serde(rename = "all")]
+    #[default]
     All,
     #[serde(rename = "any")]
     Any,
@@ -202,11 +204,6 @@ impl TryFrom<&str> for Mode {
             "any" => Ok(Self::Any),
             v => Err(format!("Unknown variant {v}")),
         }
-    }
-}
-impl Default for Mode {
-    fn default() -> Self {
-        Self::All
     }
 }
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]

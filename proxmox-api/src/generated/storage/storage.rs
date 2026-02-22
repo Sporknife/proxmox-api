@@ -388,12 +388,14 @@ pub struct PutParams {
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]
 #[doc = "Preallocation mode for raw and qcow2 images. Using 'metadata' on raw images results in preallocation=off."]
 #[doc = ""]
+#[derive(Default)]
 pub enum Preallocation {
     #[serde(rename = "falloc")]
     Falloc,
     #[serde(rename = "full")]
     Full,
     #[serde(rename = "metadata")]
+    #[default]
     Metadata,
     #[serde(rename = "off")]
     Off,
@@ -410,14 +412,10 @@ impl TryFrom<&str> for Preallocation {
         }
     }
 }
-impl Default for Preallocation {
-    fn default() -> Self {
-        Self::Metadata
-    }
-}
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]
 #[doc = "SMB protocol version. 'default' if not set, negotiates the highest SMB2+ version supported by both the client and server."]
 #[doc = ""]
+#[derive(Default)]
 pub enum Smbversion {
     #[serde(rename = "2.0")]
     _20,
@@ -430,6 +428,7 @@ pub enum Smbversion {
     #[serde(rename = "3.11")]
     _311,
     #[serde(rename = "default")]
+    #[default]
     Default,
 }
 impl TryFrom<&str> for Smbversion {
@@ -444,11 +443,6 @@ impl TryFrom<&str> for Smbversion {
             "default" => Ok(Self::Default),
             v => Err(format!("Unknown variant {v}")),
         }
-    }
-}
-impl Default for Smbversion {
-    fn default() -> Self {
-        Self::Default
     }
 }
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]

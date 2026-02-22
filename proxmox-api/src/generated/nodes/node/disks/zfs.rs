@@ -153,6 +153,7 @@ pub struct PostParams {
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]
 #[doc = "The compression algorithm to use."]
 #[doc = ""]
+#[derive(Default)]
 pub enum Compression {
     #[serde(rename = "gzip")]
     Gzip,
@@ -163,6 +164,7 @@ pub enum Compression {
     #[serde(rename = "off")]
     Off,
     #[serde(rename = "on")]
+    #[default]
     On,
     #[serde(rename = "zle")]
     Zle,
@@ -182,11 +184,6 @@ impl TryFrom<&str> for Compression {
             "zstd" => Ok(Self::Zstd),
             v => Err(format!("Unknown variant {v}")),
         }
-    }
-}
-impl Default for Compression {
-    fn default() -> Self {
-        Self::On
     }
 }
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]

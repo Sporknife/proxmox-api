@@ -271,6 +271,7 @@ impl TryFrom<&str> for State {
 #[doc = ""]
 #[doc = "on node failures."]
 #[doc = ""]
+#[derive(Default)]
 pub enum State2 {
     #[serde(rename = "disabled")]
     Disabled,
@@ -279,6 +280,7 @@ pub enum State2 {
     #[serde(rename = "ignored")]
     Ignored,
     #[serde(rename = "started")]
+    #[default]
     Started,
     #[serde(rename = "stopped")]
     Stopped,
@@ -294,11 +296,6 @@ impl TryFrom<&str> for State2 {
             "stopped" => Ok(Self::Stopped),
             v => Err(format!("Unknown variant {v}")),
         }
-    }
-}
-impl Default for State2 {
-    fn default() -> Self {
-        Self::Started
     }
 }
 impl<T> SidClient<T>

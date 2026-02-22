@@ -46,10 +46,12 @@ pub struct PostParams {
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]
 #[doc = "Run specific command or default to login (requires 'root@pam')"]
 #[doc = ""]
+#[derive(Default)]
 pub enum Cmd {
     #[serde(rename = "ceph_install")]
     CephInstall,
     #[serde(rename = "login")]
+    #[default]
     Login,
     #[serde(rename = "upgrade")]
     Upgrade,
@@ -63,10 +65,5 @@ impl TryFrom<&str> for Cmd {
             "upgrade" => Ok(Self::Upgrade),
             v => Err(format!("Unknown variant {v}")),
         }
-    }
-}
-impl Default for Cmd {
-    fn default() -> Self {
-        Self::Login
     }
 }

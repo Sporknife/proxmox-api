@@ -121,8 +121,10 @@ pub struct PostParams {
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]
 #[doc = "The desired filesystem."]
 #[doc = ""]
+#[derive(Default)]
 pub enum Filesystem {
     #[serde(rename = "ext4")]
+    #[default]
     Ext4,
     #[serde(rename = "xfs")]
     Xfs,
@@ -135,11 +137,6 @@ impl TryFrom<&str> for Filesystem {
             "xfs" => Ok(Self::Xfs),
             v => Err(format!("Unknown variant {v}")),
         }
-    }
-}
-impl Default for Filesystem {
-    fn default() -> Self {
-        Self::Ext4
     }
 }
 impl<T> DirectoryClient<T>

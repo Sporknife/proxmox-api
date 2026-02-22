@@ -162,12 +162,14 @@ pub struct GetParams {
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]
 #[doc = "List archived, active or all tasks."]
 #[doc = ""]
+#[derive(Default)]
 pub enum Source {
     #[serde(rename = "active")]
     Active,
     #[serde(rename = "all")]
     All,
     #[serde(rename = "archive")]
+    #[default]
     Archive,
 }
 impl TryFrom<&str> for Source {
@@ -179,11 +181,6 @@ impl TryFrom<&str> for Source {
             "archive" => Ok(Self::Archive),
             v => Err(format!("Unknown variant {v}")),
         }
-    }
-}
-impl Default for Source {
-    fn default() -> Self {
-        Self::Archive
     }
 }
 impl<T> TasksClient<T>

@@ -116,6 +116,13 @@ impl ToTokens for EnumDef {
             quote! { #parsed, }
         });
 
+        let default_attr = if let Some(default) = default {
+            let default = Self::to_variant(default);
+            Some(Ident::new(&default, quote!().span()))
+        } else {
+            None
+        };
+
         let variants = values.iter().map(|orig| {
             let v = Self::to_variant(orig);
 
@@ -126,17 +133,32 @@ impl ToTokens for EnumDef {
                 None
             };
 
+            let default_marker =
+                if Some(&v) == default_attr.as_ref().map(|d| d.to_string()).as_ref() {
+                    Some(quote!(#[default]))
+                } else {
+                    None
+                };
+
             let ident = Ident::new(&v, quote!().span());
 
             quote! {
                 #rename
+                #default_marker
                 #ident,
             }
         });
 
+        let default_derive = if default.is_some() {
+            Some(quote!(#[derive(Default)]))
+        } else {
+            None
+        };
+
         tokens.extend(quote! {
             #[derive(#(#derives)*)]
             #(#enum_doc)*
+            #default_derive
             pub enum #name {
                 #(#variants)*
             }
@@ -159,18 +181,5 @@ impl ToTokens for EnumDef {
                 }
             }
         });
-
-        if let Some(default) = default {
-            let default = Self::to_variant(default);
-            let default_ident = Ident::new(&default, quote!().span());
-
-            tokens.extend(quote! {
-                impl Default for #name {
-                    fn default() -> Self {
-                        Self::#default_ident
-                    }
-                }
-            })
-        }
     }
 }

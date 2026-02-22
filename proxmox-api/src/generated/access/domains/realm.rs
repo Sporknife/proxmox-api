@@ -243,8 +243,10 @@ pub struct PutParams {
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]
 #[doc = "LDAP protocol mode."]
 #[doc = ""]
+#[derive(Default)]
 pub enum Mode {
     #[serde(rename = "ldap")]
+    #[default]
     Ldap,
     #[serde(rename = "ldap+starttls")]
     LdapStarttls,
@@ -260,11 +262,6 @@ impl TryFrom<&str> for Mode {
             "ldaps" => Ok(Self::Ldaps),
             v => Err(format!("Unknown variant {v}")),
         }
-    }
-}
-impl Default for Mode {
-    fn default() -> Self {
-        Self::Ldap
     }
 }
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]

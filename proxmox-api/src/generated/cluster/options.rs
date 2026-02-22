@@ -194,12 +194,14 @@ impl TryFrom<&str> for Console {
 #[doc = ""]
 #[doc = "WARNING: 'hardware' and 'both' are EXPERIMENTAL & WIP"]
 #[doc = ""]
+#[derive(Default)]
 pub enum Fencing {
     #[serde(rename = "both")]
     Both,
     #[serde(rename = "hardware")]
     Hardware,
     #[serde(rename = "watchdog")]
+    #[default]
     Watchdog,
 }
 impl TryFrom<&str> for Fencing {
@@ -211,11 +213,6 @@ impl TryFrom<&str> for Fencing {
             "watchdog" => Ok(Self::Watchdog),
             v => Err(format!("Unknown variant {v}")),
         }
-    }
-}
-impl Default for Fencing {
-    fn default() -> Self {
-        Self::Watchdog
     }
 }
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]

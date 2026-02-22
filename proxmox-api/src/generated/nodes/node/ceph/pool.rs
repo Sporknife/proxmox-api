@@ -271,10 +271,12 @@ pub struct PostParams {
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]
 #[doc = "The application of the pool."]
 #[doc = ""]
+#[derive(Default)]
 pub enum Application {
     #[serde(rename = "cephfs")]
     Cephfs,
     #[serde(rename = "rbd")]
+    #[default]
     Rbd,
     #[serde(rename = "rgw")]
     Rgw,
@@ -290,20 +292,17 @@ impl TryFrom<&str> for Application {
         }
     }
 }
-impl Default for Application {
-    fn default() -> Self {
-        Self::Rbd
-    }
-}
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]
 #[doc = "The automatic PG scaling mode of the pool."]
 #[doc = ""]
+#[derive(Default)]
 pub enum PgAutoscaleMode {
     #[serde(rename = "off")]
     Off,
     #[serde(rename = "on")]
     On,
     #[serde(rename = "warn")]
+    #[default]
     Warn,
 }
 impl TryFrom<&str> for PgAutoscaleMode {
@@ -315,11 +314,6 @@ impl TryFrom<&str> for PgAutoscaleMode {
             "warn" => Ok(Self::Warn),
             v => Err(format!("Unknown variant {v}")),
         }
-    }
-}
-impl Default for PgAutoscaleMode {
-    fn default() -> Self {
-        Self::Warn
     }
 }
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]

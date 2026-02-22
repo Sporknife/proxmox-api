@@ -215,6 +215,7 @@ pub struct PostParams {
 #[doc = ""]
 #[doc = "on node failures."]
 #[doc = ""]
+#[derive(Default)]
 pub enum State {
     #[serde(rename = "disabled")]
     Disabled,
@@ -223,6 +224,7 @@ pub enum State {
     #[serde(rename = "ignored")]
     Ignored,
     #[serde(rename = "started")]
+    #[default]
     Started,
     #[serde(rename = "stopped")]
     Stopped,
@@ -238,11 +240,6 @@ impl TryFrom<&str> for State {
             "stopped" => Ok(Self::Stopped),
             v => Err(format!("Unknown variant {v}")),
         }
-    }
-}
-impl Default for State {
-    fn default() -> Self {
-        Self::Started
     }
 }
 #[derive(Clone, Debug, :: serde :: Serialize, :: serde :: Deserialize, PartialEq)]
