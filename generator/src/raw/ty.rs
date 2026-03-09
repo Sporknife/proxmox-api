@@ -3,7 +3,7 @@ use std::{
     collections::{BTreeMap, BTreeSet},
 };
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::generator::{
     AdditionalProperties, BoundedIntegerDef, BoundedNumberDef, BoundedStringDef, FieldDef,
@@ -12,80 +12,189 @@ use crate::generator::{
 
 use super::{Format, KnownFormat, Optional, Output};
 
-fn parse_value_to_i128(value: &serde_json::Value) -> Option<i128> {
-    match value {
-        serde_json::Value::Number(n) => n.as_i64().map(|v| v as i128),
-        serde_json::Value::String(s) => s.parse::<i128>().ok(),
-        _ => None,
+fn deserialize_optional_i128<'de, D>(deserializer: D) -> Result<Option<i128>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct Visitor;
+
+    impl<'de> serde::de::Visitor<'de> for Visitor {
+        type Value = Option<i128>;
+
+        fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            write!(f, "an integer, a string encoding an integer, or null")
+        }
+
+        fn visit_none<E>(self) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(None)
+        }
+
+        fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            deserializer.deserialize_any(Visitor)
+        }
+
+        fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(Some(v as i128))
+        }
+
+        fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(Some(v as i128))
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            // Lenient: return None for non-numeric strings (descriptive defaults)
+            Ok(v.parse::<i128>().ok())
+        }
     }
+
+    deserializer.deserialize_option(Visitor)
 }
 
-fn extract_integer_bounds(ty: &TypeKind, field_name: &str) -> Option<BoundedIntegerDef> {
-    let TypeKind::Integer {
-        minimum,
-        maximum,
-        default,
-    } = ty
-    else {
-        return None;
-    };
+fn deserialize_optional_f64<'de, D>(deserializer: D) -> Result<Option<f64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct Visitor;
 
-    let has_constraints = minimum.is_some() || maximum.is_some() || default.is_some();
+    impl<'de> serde::de::Visitor<'de> for Visitor {
+        type Value = Option<f64>;
 
-    if !has_constraints {
-        return None;
+        fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            write!(f, "a number, a string encoding a number, or null")
+        }
+
+        fn visit_none<E>(self) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(None)
+        }
+
+        fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            deserializer.deserialize_any(Visitor)
+        }
+
+        fn visit_f64<E>(self, v: f64) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(Some(v))
+        }
+
+        fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(Some(v as f64))
+        }
+
+        fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(Some(v as f64))
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            // Lenient: return None for non-numeric strings (descriptive defaults)
+            Ok(v.parse::<f64>().ok())
+        }
     }
 
-    let min = minimum.as_ref().and_then(parse_value_to_i128);
-    let max = maximum.as_ref().and_then(parse_value_to_i128);
-    let default = default.as_ref().and_then(parse_value_to_i128);
-
-    let name = crate::name_to_ident(&format!("{}Int", field_name));
-
-    Some(BoundedIntegerDef {
-        name,
-        min,
-        max,
-        default,
-    })
+    deserializer.deserialize_option(Visitor)
 }
 
-fn parse_value_to_f64(value: &serde_json::Value) -> Option<f64> {
-    match value {
-        serde_json::Value::Number(n) => n.as_f64(),
-        serde_json::Value::String(s) => s.parse::<f64>().ok(),
-        _ => None,
+fn deserialize_optional_bool<'de, D>(deserializer: D) -> Result<Option<bool>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct Visitor;
+
+    impl<'de> serde::de::Visitor<'de> for Visitor {
+        type Value = Option<bool>;
+
+        fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            write!(f, "a boolean, 0/1, a string encoding those values, or null")
+        }
+
+        fn visit_none<E>(self) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(None)
+        }
+
+        fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            deserializer.deserialize_any(Visitor)
+        }
+
+        fn visit_bool<E>(self, v: bool) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(Some(v))
+        }
+
+        fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(match v {
+                0 => Some(false),
+                1 => Some(true),
+                _ => None,
+            })
+        }
+
+        fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(match v {
+                0 => Some(false),
+                1 => Some(true),
+                _ => None,
+            })
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            let value = match v.trim().to_ascii_lowercase().as_str() {
+                "0" | "false" => Some(false),
+                "1" | "true" => Some(true),
+                _ => None,
+            };
+            Ok(value)
+        }
     }
-}
 
-fn extract_number_bounds(ty: &TypeKind, field_name: &str) -> Option<BoundedNumberDef> {
-    let TypeKind::Number {
-        minimum,
-        maximum,
-        default,
-    } = ty
-    else {
-        return None;
-    };
-
-    let has_constraints = minimum.is_some() || maximum.is_some() || default.is_some();
-
-    if !has_constraints {
-        return None;
-    }
-
-    let min = minimum.as_ref().and_then(parse_value_to_f64);
-    let max = maximum.as_ref().and_then(parse_value_to_f64);
-    let default = default.as_ref().and_then(parse_value_to_f64);
-
-    let name = crate::name_to_ident(&format!("{}Num", field_name));
-
-    Some(BoundedNumberDef {
-        name,
-        min,
-        max,
-        default,
-    })
+    deserializer.deserialize_option(Visitor)
 }
 
 fn extract_string_constraints(ty: &TypeKind, field_name: &str) -> Option<BoundedStringDef> {
@@ -218,20 +327,32 @@ impl Type<'_> {
                         TypeDef::Primitive(PrimitiveTypeDef::String)
                     }
                 }
-                TypeKind::Number { .. } => {
-                    if let Some(bounded) = extract_number_bounds(ty, field_name) {
-                        TypeDef::BoundedNumber(bounded)
-                    } else {
-                        TypeDef::Primitive(PrimitiveTypeDef::Number)
-                    }
-                }
-                TypeKind::Integer { .. } => {
-                    if let Some(bounded) = extract_integer_bounds(ty, field_name) {
-                        TypeDef::BoundedInteger(bounded)
-                    } else {
-                        TypeDef::Primitive(PrimitiveTypeDef::Integer)
-                    }
-                }
+                TypeKind::Number {
+                    minimum,
+                    maximum,
+                    default,
+                } => match (*minimum, *maximum, *default) {
+                    (None, None, None | Some(0.0)) => TypeDef::Primitive(PrimitiveTypeDef::Number),
+                    _ => TypeDef::BoundedNumber(BoundedNumberDef {
+                        name: crate::name_to_ident(&format!("{}Num", field_name)),
+                        min: *minimum,
+                        max: *maximum,
+                        default: *default,
+                    }),
+                },
+                TypeKind::Integer {
+                    minimum,
+                    maximum,
+                    default,
+                } => match (*minimum, *maximum, *default) {
+                    (None, None, None | Some(0)) => TypeDef::Primitive(PrimitiveTypeDef::Integer),
+                    _ => TypeDef::BoundedInteger(BoundedIntegerDef {
+                        name: crate::name_to_ident(&format!("{}Int", field_name)),
+                        min: *minimum,
+                        max: *maximum,
+                        default: *default,
+                    }),
+                },
                 TypeKind::Boolean { .. } => TypeDef::Primitive(PrimitiveTypeDef::Boolean),
                 TypeKind::Array { items } => {
                     let mut output =
@@ -380,26 +501,54 @@ pub enum TypeKind<'a> {
         default: Option<Cow<'a, str>>,
     },
     Number {
-        #[serde(default, alias = "min", skip_serializing_if = "Option::is_none")]
-        minimum: Option<serde_json::Value>,
-        #[serde(default, alias = "max", skip_serializing_if = "Option::is_none")]
-        maximum: Option<serde_json::Value>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        default: Option<serde_json::Value>,
+        #[serde(
+            default,
+            alias = "min",
+            skip_serializing_if = "Option::is_none",
+            deserialize_with = "deserialize_optional_f64"
+        )]
+        minimum: Option<f64>,
+        #[serde(
+            default,
+            alias = "max",
+            skip_serializing_if = "Option::is_none",
+            deserialize_with = "deserialize_optional_f64"
+        )]
+        maximum: Option<f64>,
+        #[serde(
+            default,
+            skip_serializing_if = "Option::is_none",
+            deserialize_with = "deserialize_optional_f64"
+        )]
+        default: Option<f64>,
     },
     Integer {
-        // Is sometimes a string containing a u32
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        minimum: Option<serde_json::Value>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        maximum: Option<serde_json::Value>,
-        // Is sometimes a string description
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        default: Option<serde_json::Value>,
+        #[serde(
+            default,
+            skip_serializing_if = "Option::is_none",
+            deserialize_with = "deserialize_optional_i128"
+        )]
+        minimum: Option<i128>,
+        #[serde(
+            default,
+            skip_serializing_if = "Option::is_none",
+            deserialize_with = "deserialize_optional_i128"
+        )]
+        maximum: Option<i128>,
+        #[serde(
+            default,
+            skip_serializing_if = "Option::is_none",
+            deserialize_with = "deserialize_optional_i128"
+        )]
+        default: Option<i128>,
     },
     Boolean {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        default: Option<serde_json::Value>,
+        #[serde(
+            default,
+            skip_serializing_if = "Option::is_none",
+            deserialize_with = "deserialize_optional_bool"
+        )]
+        default: Option<bool>,
     },
     Array {
         items: Box<Type<'a>>,
